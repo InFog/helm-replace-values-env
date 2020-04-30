@@ -88,6 +88,8 @@ main() {
             var_name=`echo $name | tr '[:lower:]' '[:upper:]'`
         fi
 
+        var_name="$PREFIX$var_name"
+
         value=${!var_name}
 
         if [[ "$value" ]]; then
