@@ -1,0 +1,9 @@
+---
+name: "replace-values-env"
+version: "0.1.0"
+usage: "replaces values on a values.yaml file with the values from environment variables"
+description: |-
+  Replaces values on a values.yaml file with the values from environment variables
+command: "$HELM_PLUGIN_DIR/replace-values-env.sh"
+hooks:
+  install: "$HELM_PLUGIN_DIR/replace-values-env.sh --help"
