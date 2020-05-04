@@ -27,8 +27,8 @@ exit
 
 parse_input() {
     skip_next=0
-    while [[ $# -ne 0 ]]; do
-        if [[ $skip_next -eq 1 ]]; then
+    while [ $# -ne 0 ]; do
+        if [ $skip_next -eq 1 ]; then
             shift
             skip_next=0
         fi
@@ -62,58 +62,96 @@ parse_input() {
 }
 
 validate_input() {
-    if [[ ! "$FILE" ]]; then
+    if [ ! "$FILE" ]; then
         echo "values.yaml file not provided. Please provide a file using -f parameter"
         exit 1
     fi
 
-    if [[ ! -f "$FILE" ]]; then
+    if [ ! -f "$FILE" ]; then
         echo "$FILE is not a file"
         exit 2
     fi
 }
 
+parse_var_name() {
+    var_name="$1"
+
+    if [ $UPPERCASED_ENV -eq 1 ]; then
+        var_name=$(echo "$var_name" | tr '[:lower:]' '[:upper:]')
+    fi
+
+    var_name=$(echo "$var_name" | sed -e 's/^[ \t]*//')
+
+    if [ "$PREFIX" ]; then
+        var_name="$PREFIX$var_name"
+    fi
+
+    echo "$var_name"
+}
+
+is_comment() {
+    line=$(echo "$1" | sed -e 's/^[ \t]*//')
+    first=$(echo "$line" | cut -c1-1)
+
+    if [ "#" = "$first" ]; then
+        echo "1"
+    else
+        echo ""
+    fi
+}
+
 main() {
-    parse_input $@
+    parse_input "$@"
     validate_input
 
-    tmp_file=`mktemp`
-    echo "# Generated with helm replace-values-env" > $tmp_file
+    tmp_file=$(mktemp)
+    echo "# Generated with helm replace-values-env" > "$tmp_file"
 
     while IFS= read -r line; do
-        name=`echo "$line" | cut -d \: -f 1`
-        var_name=`echo $name`
+        is_line_a_comment=$(is_comment "$line")
 
-        if [[ $UPPERCASED_ENV -eq 1 ]]; then
-            var_name=`echo $name | tr '[:lower:]' '[:upper:]'`
+        if [ "$is_line_a_comment" ]; then
+            if [ $VERBOSE -eq 1 ]; then
+                echo "KEPT     => |" "$line"
+            fi
+
+            echo "$line" >> "$tmp_file"
+
+            continue
         fi
 
-        var_name="$PREFIX$var_name"
+        name=$(echo "$line" | cut -d \: -f 1)
 
-        value=${!var_name}
+        var_name=$(parse_var_name "$name")
 
-        if [[ "$value" ]]; then
+        if [ ! "$var_name" ]; then
+            continue
+        fi
+
+        value=$(eval "echo \$$var_name")
+
+        if [ "$value" ]; then
             new_line="$name: \"$value\""
-            if [[ $VERBOSE -eq 1 ]]; then
+            if [ $VERBOSE -eq 1 ]; then
                 echo "REPLACED => |" "$new_line"
             fi
 
         else
             new_line="$line"
-            if [[ $VERBOSE -eq 1 ]]; then
+            if [ $VERBOSE -eq 1 ]; then
                 echo "KEPT     => |" "$new_line"
             fi
         fi
-        echo "$new_line" >> $tmp_file
-    done < $FILE
+        echo "$new_line" >> "$tmp_file"
+    done < "$FILE"
 
-    if [[ $DRY_RUN -eq 1 ]]; then
-        cat $tmp_file
+    if [ $DRY_RUN -eq 1 ]; then
+        cat "$tmp_file"
     else
-        cp $tmp_file $FILE
+        cp "$tmp_file" "$FILE"
     fi
 
-    rm $tmp_file
+    rm "$tmp_file"
 }
 
-main $@
+main "$@"
