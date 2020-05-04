@@ -84,7 +84,7 @@ main() {
         name=`echo "$line" | cut -d \: -f 1`
         var_name=`echo $name`
 
-        if [[ UPPERCASED_ENV -eq 1 ]]; then
+        if [[ $UPPERCASED_ENV -eq 1 ]]; then
             var_name=`echo $name | tr '[:lower:]' '[:upper:]'`
         fi
 
@@ -94,20 +94,20 @@ main() {
 
         if [[ "$value" ]]; then
             new_line="$name: \"$value\""
-            if [[ VERBOSE -eq 1 ]]; then
+            if [[ $VERBOSE -eq 1 ]]; then
                 echo "REPLACED => |" "$new_line"
             fi
 
         else
             new_line="$line"
-            if [[ VERBOSE -eq 1 ]]; then
+            if [[ $VERBOSE -eq 1 ]]; then
                 echo "KEPT     => |" "$new_line"
             fi
         fi
         echo "$new_line" >> $tmp_file
     done < $FILE
 
-    if [[ DRY_RUN -eq 1 ]]; then
+    if [[ $DRY_RUN -eq 1 ]]; then
         cat $tmp_file
     else
         cp $tmp_file $FILE
