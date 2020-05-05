@@ -73,6 +73,10 @@ validate_input() {
     fi
 }
 
+trim() {
+    echo "$1" | sed -e 's/^[ \t]*//'
+}
+
 parse_var_name() {
     var_name="$1"
 
@@ -80,7 +84,7 @@ parse_var_name() {
         var_name=$(echo "$var_name" | tr '[:lower:]' '[:upper:]')
     fi
 
-    var_name=$(echo "$var_name" | sed -e 's/^[ \t]*//')
+    var_name=$(trim "$var_name")
 
     if [ "$PREFIX" ]; then
         var_name="$PREFIX$var_name"
@@ -90,10 +94,21 @@ parse_var_name() {
 }
 
 is_comment() {
-    line=$(echo "$1" | sed -e 's/^[ \t]*//')
+    line=$(trim "$1")
     first=$(echo "$line" | cut -c1-1)
 
     if [ "#" = "$first" ]; then
+        echo "1"
+    else
+        echo ""
+    fi
+}
+
+is_list_item() {
+    line=$(trim "$1")
+    first=$(echo "$line" | cut -c1-1)
+
+    if [ "-" = "$first" ]; then
         echo "1"
     else
         echo ""
@@ -109,8 +124,9 @@ main() {
 
     while IFS= read -r line; do
         is_line_a_comment=$(is_comment "$line")
+        is_line_a_list_item=$(is_list_item "$line")
 
-        if [ "$is_line_a_comment" ]; then
+        if [ "$is_line_a_comment" ] || [ "$is_line_a_list_item" ]; then
             if [ $VERBOSE -eq 1 ]; then
                 echo "KEPT     => |" "$line"
             fi

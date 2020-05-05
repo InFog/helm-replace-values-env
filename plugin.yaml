@@ -1,6 +1,6 @@
 ---
 name: "replace-values-env"
-version: "0.4.0"
+version: "0.4.1"
 usage: "replaces values on a values.yaml file with the values from environment variables"
 description: |-
   Replaces values on a values.yaml file with the values from environment variables
