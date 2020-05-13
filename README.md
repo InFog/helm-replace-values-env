@@ -58,9 +58,10 @@ Usage:
 
 Options:
     -h, --help                  Shows usage help
-    -f <file>                   The file to have it's values replaced
+    -f values.yaml              The file to have it's values replaced
     -p, --prefix <prefix>       A prefix to be removed from the variables' names
     -u, --uppercased            The environment variables are in uppercase
+    -i, --ignore <var1,var2>    Comma separated list of variables to ignore
     -d, --dry-run               Outputs the resulting file without replacing the original one
     -v, --verbose               Verbose mode, shows the kept and replaced lines
 ```
