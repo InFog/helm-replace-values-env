@@ -5,6 +5,7 @@ VERBOSE=0
 UPPERCASED_ENV=0
 DRY_RUN=0
 PREFIX=""
+IGNORED=""
 
 help() {
 cat << EOF
@@ -19,6 +20,7 @@ Options:
     -f values.yaml              The file to have it's values replaced
     -p, --prefix <prefix>       A prefix to be removed from the variables' names
     -u, --uppercased            The environment variables are in uppercase
+    -i, --ignore <var1,var2>    Comma separated list of variables to ignore
     -d, --dry-run               Outputs the resulting file without replacing the original one
     -v, --verbose               Verbose mode, shows the kept and replaced lines
 EOF
@@ -48,6 +50,10 @@ parse_input() {
                 ;;
             -u | --uppercased)
                 UPPERCASED_ENV=1
+                ;;
+            -i | --ignore)
+                IGNORED="$2"
+                skip_next=1
                 ;;
             -d | --dry-run)
                 DRY_RUN=1
@@ -115,6 +121,20 @@ is_list_item() {
     fi
 }
 
+is_ignored() {
+    b=$IFS
+    IFS=","
+    for var_name in $IGNORED
+    do
+        if [ "$var_name" = "$1" ]; then
+            echo "1"
+        fi
+    done
+    IFS=$b
+
+    echo ""
+}
+
 main() {
     parse_input "$@"
     validate_input
@@ -137,10 +157,21 @@ main() {
         fi
 
         name=$(echo "$line" | cut -d \: -f 1)
-
         var_name=$(parse_var_name "$name")
 
         if [ ! "$var_name" ]; then
+            continue
+        fi
+
+        is_var_name_ignored=$(is_ignored "$var_name")
+
+        if [ "$is_var_name_ignored" ]; then
+            if [ $VERBOSE -eq 1 ]; then
+                echo "IGNORED  => |" "$line"
+            fi
+
+            echo "$line" >> "$tmp_file"
+
             continue
         fi
 
